@@ -1,0 +1,5 @@
+body {
+  background: #aaf;
+  user-select: none;
+  -webkit-user-select: none;
+}
