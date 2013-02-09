@@ -46,8 +46,9 @@ shuffle = (arr) ->
 size = 10
 board = []
 reset_board = ->
-  cards = [1..(size*size/2)]
-  cards = cards.concat(cards)
+  cards = [1..10]
+  while cards.length < size * size
+    cards = cards.concat(cards)
   shuffle cards
   board = []
   for y in [0...size]
@@ -67,6 +68,14 @@ set = (x, y, val) ->
 
 players = {}
 clients = {}
+
+broadcast_to_others = (source, type, data) ->
+  for id, client of clients
+    continue if source.id == id
+    try
+      client.emit type, data
+    catch err
+      console.log "Couldn't emit #{type}: #{err}"
 
 broadcast = (type, data) ->
   for id, client of clients
@@ -102,18 +111,20 @@ io.sockets.on 'connection', (client) ->
     cur = get(msg.x, msg.y)
     prev = get(last_move.x, last_move.y) if last_move
 
-    if cur? && prev? && cur == prev
+    if cur? && prev? && !(msg.x == last_move.x && msg.y == last_move.y) && cur == prev
       player.score += cur
-      board.set(msg.x, msg.y, null)
-      board.set(last_move.x, last_move.y, null)
+      set(msg.x, msg.y, null)
+      set(last_move.x, last_move.y, null)
       board.remaining -= 2
 
       if board.remaining == 0
         do reset_board
 
       broadcast 'board', board
+      broadcast 'players', players
 
-    broadcast 'players', players
+    last_move = msg
+
     broadcast 'choose'
       id: client.id
       x: msg.x

@@ -1,7 +1,7 @@
 steps_to_show = 4
 
 # GAME STATE
-name = 'foo' #prompt "Your name?"
+name = prompt "Your name?"
 board = []
 players = {}
 prev_choices = {}
@@ -26,15 +26,16 @@ create_board = ->
     for cell in row
       td = $('<td>')
         .appendTo(tr)
-        .text(get(board, x, y))
-        .css
-          opacity: '0.5'
 
-      td[0].x = x
-      td[0].y = y
+      div = $('<div>')
+        .appendTo(td)
+        .css( 'opacity', '0.0' )
 
-      brow.push td[0]
-      cell_list.push td[0]
+      div[0].x = x
+      div[0].y = y
+
+      brow.push div[0]
+      cell_list.push div[0]
       x++
 
     y++
@@ -43,15 +44,17 @@ create_board = ->
 
 mice = {}
 draw_mouse = (id, x, y) ->
-  return
   mouse = mice[id] ||= $('<div>').appendTo( 'body' )
+  mine = socket.socket.sessionid == id
   mouse.css
-    width: '8px'
-    height: '8px'
+    width: '64px'
+    height: '64px'
     position: 'absolute'
+    opacity: '0.5'
     background: 'white'
-    top: "#{y - 4}px"
-    left: "#{x - 4}px"
+    top: "#{y - 32}px"
+    left: "#{x - 32}px"
+    'pointer-events': if mine then 'none' else 'auto'
 
 update_players = ->
   $('#players').empty()
@@ -65,9 +68,11 @@ get = (arr, x, y) ->
 
 update_board = ->
   for cell in cell_list
-    $(@).text get(board, cell.x, cell.y)
+    value = get(board, cell.x, cell.y)
+    $(cell).text value
+    $(cell).parent().css 'visibility', if value then 'visible' else 'hidden'
 
-update_visibility = (cards) ->
+update_opacity = (cards) ->
   opacity = 1.0
   for card in cards
     cell = get cell_table, card.x, card.y
@@ -76,7 +81,6 @@ update_visibility = (cards) ->
 
     opacity -= 1/steps_to_show
     opacity = 0 if opacity < 0
-
 
 # NETWORKING
 socket = null
@@ -91,7 +95,7 @@ reconnect = ->
     create = board.length == 0
     board = msg
     create_board() if create
-    # update_board()
+    update_board()
 
   socket.on 'mouse', (msg) ->
     draw_mouse msg.id, msg.x, msg.y
@@ -103,8 +107,8 @@ reconnect = ->
   socket.on 'choose', (msg) ->
     prev = (prev_choices[msg.id] ||= [])
     prev.unshift msg
-    update_visibility prev
-    prev.pop if prev.length > steps_to_show
+    update_opacity prev
+    prev.pop() if prev.length > steps_to_show
 
 reconnect()
 
@@ -112,7 +116,6 @@ reconnect()
 # INPUT
 last_mouse = new Date().getTime()
 document.onmousemove = (e) ->
-  return
   return unless socket?
   now = new Date().getTime()
   return if now - last_mouse < 30

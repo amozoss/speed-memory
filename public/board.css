@@ -3,3 +3,21 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+#board td {
+  width: 60px;
+  height: 60px;
+  font-size: 45px;
+  text-align: center;
+  padding: 0px;
+  background-color: black;
+  cursor: pointer;
+}
+
+#board td:hover {
+  background-color: green;
+}
+
+#board td div {
+  color: white;
+}
