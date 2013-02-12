@@ -46,9 +46,10 @@ shuffle = (arr) ->
 size = 10
 board = []
 reset_board = ->
-  cards = [1..10]
+  choices = [1..10]
+  cards = []
   while cards.length < size * size
-    cards = cards.concat(cards)
+    cards = cards.concat(choices)
   shuffle cards
   board = []
   for y in [0...size]
