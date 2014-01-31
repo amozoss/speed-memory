@@ -24,7 +24,7 @@ server = http.createServer (req,res) ->
       else
         console.log "Unknown content type: #{ext}"
         'application/octet-stream'
-    res.writeHead 200
+    res.writeHead 200, 
       'Content-Type': content_type
     res.write data, 'utf8'
     res.end()
@@ -102,7 +102,7 @@ io.sockets.on 'connection', (client) ->
     client.emit 'board', board
 
   client.on 'mouse', (msg) ->
-    broadcast 'mouse'
+    broadcast 'mouse', 
       id: client.id
       x: msg.x
       y: msg.y
@@ -126,7 +126,7 @@ io.sockets.on 'connection', (client) ->
 
     last_move = msg
 
-    broadcast 'choose'
+    broadcast 'choose', 
       id: client.id
       x: msg.x
       y: msg.y
