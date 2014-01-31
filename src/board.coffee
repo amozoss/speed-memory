@@ -88,7 +88,7 @@ reconnect = ->
   socket = io.connect window.location.href
 
   socket.on 'connect', ->
-    socket.emit 'register'
+    socket.emit 'register', 
       name: name
 
   socket.on 'board', (msg) ->
@@ -120,7 +120,7 @@ document.onmousemove = (e) ->
   now = new Date().getTime()
   return if now - last_mouse < 30
   last_mouse = now
-  socket.emit 'mouse'
+  socket.emit 'mouse', 
     x: e.clientX + window.scrollX
     y: e.clientY + window.scrollY
   true
@@ -128,6 +128,6 @@ document.onmousemove = (e) ->
 register_clicks = ->
   for cell in cell_list
     cell.onclick = ->
-      socket.emit 'choose'
+      socket.emit 'choose', 
         x: @x
         y: @y
