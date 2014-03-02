@@ -9,6 +9,9 @@ possible.
 This is a proof-of-concept of the idea of taking a turn-based game and making
 it real-time.
 
+<img src="screenshot.png"/>
+
+
 Installation
 ------------
 
