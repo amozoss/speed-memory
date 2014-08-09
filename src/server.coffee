@@ -29,12 +29,12 @@ server = http.createServer (req,res) ->
     res.write data, 'utf8'
     res.end()
 
-server.listen 3000
+server.listen(process.env.PORT || 3000) 
 
 console.log "Server running on http://localhost:3000"
 
 io = io.listen(server)
-io.set 'log level', 2
+#io.set 'log level', 2
 
 shuffle = (arr) ->
   for i in [(arr.length-1)...0] by -1
@@ -43,6 +43,7 @@ shuffle = (arr) ->
     arr[i] = arr[j]
     arr[j] = temp
 
+color = 1
 size = 10
 board = []
 reset_board = ->
@@ -91,9 +92,11 @@ broadcast = (type, data) ->
 io.sockets.on 'connection', (client) ->
   player =
     id: client.id
+    color: color 
     name: "Anonymous"
     score: 0
 
+  color++
   client.on 'register', (msg) ->
     player.name = msg.name
     players[client.id] = player
@@ -114,6 +117,10 @@ io.sockets.on 'connection', (client) ->
 
     if cur? && prev? && !(msg.x == last_move.x && msg.y == last_move.y) && cur == prev
       player.score += cur
+      broadcast 'scored',
+        id: client.id
+        name: player.name
+        amount: cur
       set(msg.x, msg.y, null)
       set(last_move.x, last_move.y, null)
       board.remaining -= 2
@@ -128,6 +135,7 @@ io.sockets.on 'connection', (client) ->
 
     broadcast 'choose', 
       id: client.id
+      color: player.color
       x: msg.x
       y: msg.y
 
