@@ -4,6 +4,23 @@ fs = require 'fs'
 io = require 'socket.io'
 sys = require 'sys'
 
+colors = [
+  "#ff0000", # red
+  "#00ff00", # green
+  "#0000ff", # blue
+  "#8a2be2", # BlueViolet
+  "#458b00", # dark green
+  "#ff7f24", # orange
+  "#eead0e", # gold
+  "#104e8b", # dark blue
+  "#8b1a1a", # dark red
+  "#cd9b9b", # rosy brown
+  "#8b4513", # brown
+  "#54ff9f", # sea green
+  "#ffa54f", # tan
+  "#ff3e96"  # violet
+]
+
 send404 = (res) ->
   res.writeHead(404)
   res.write('404')
@@ -86,13 +103,21 @@ broadcast = (type, data) ->
     catch err
       console.log "Couldn't emit #{type}: #{err}"
 
+broadcastPlayers = (players) ->
+  broadcast 'players', players
+  array = []
+  for key, value of players
+    array.push(value)
+  broadcast 'leaderboard', array.sort((a,b)->
+    (b.score > a.score) ? 1 : ((a.score > b.score) ? -1 : 0))
+
 # The server only needs to echo messages, except it will keep score to avoid
 # race conditions
 
 io.sockets.on 'connection', (client) ->
   player =
     id: client.id
-    color: color 
+    color: colors[color % colors.length]
     name: "Anonymous"
     score: 0
 
@@ -101,14 +126,14 @@ io.sockets.on 'connection', (client) ->
     player.name = msg.name
     players[client.id] = player
     clients[client.id] = client
-    broadcast 'players', players
+    broadcastPlayers(players)
     client.emit 'board', board
 
-  client.on 'mouse', (msg) ->
-    broadcast 'mouse', 
-      id: client.id
-      x: msg.x
-      y: msg.y
+  #client.on 'mouse', (msg) ->
+  #broadcast 'mouse', 
+  #id: client.id
+  #x: msg.x
+  #y: msg.y
 
   last_move = null
   client.on 'choose', (msg) ->
@@ -117,10 +142,6 @@ io.sockets.on 'connection', (client) ->
 
     if cur? && prev? && !(msg.x == last_move.x && msg.y == last_move.y) && cur == prev
       player.score += cur
-      broadcast 'scored',
-        id: client.id
-        name: player.name
-        amount: cur
       set(msg.x, msg.y, null)
       set(last_move.x, last_move.y, null)
       board.remaining -= 2
@@ -129,7 +150,13 @@ io.sockets.on 'connection', (client) ->
         do reset_board
 
       broadcast 'board', board
-      broadcast 'players', players
+      broadcastPlayers(players)
+
+      broadcast 'scored',
+        id: client.id
+        name: player.name
+        color: player.color
+        amount: cur
 
     last_move = msg
 
@@ -146,4 +173,6 @@ io.sockets.on 'connection', (client) ->
     console.log "disconnect"
     delete players[client.id]
     delete clients[client.id]
-    broadcast 'players', players
+    broadcastPlayers
+
+
