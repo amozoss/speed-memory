@@ -134,6 +134,14 @@ io.sockets.on 'connection', (client) ->
   #id: client.id
   #x: msg.x
   #y: msg.y
+  client.on 'restart', ->
+    broadcast 'restart', 
+      restart: true
+    do reset_board
+    for key, value of players
+      value.score = 0
+    broadcast 'board', board
+    broadcastPlayers(players)
 
   last_move = null
   client.on 'choose', (msg) ->
@@ -146,8 +154,8 @@ io.sockets.on 'connection', (client) ->
       set(last_move.x, last_move.y, null)
       board.remaining -= 2
 
-      if board.remaining == 0
-        do reset_board
+      #if board.remaining == 0
+        #do reset_board
 
       broadcast 'board', board
       broadcastPlayers(players)
