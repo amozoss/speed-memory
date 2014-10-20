@@ -181,6 +181,6 @@ io.sockets.on 'connection', (client) ->
     console.log "disconnect"
     delete players[client.id]
     delete clients[client.id]
-    broadcastPlayers
+    broadcastPlayers(players)
 
 
